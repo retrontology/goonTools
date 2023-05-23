@@ -23,10 +23,12 @@ def main():
             if event.type == pygame.QUIT:
                 sys.exit()
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 1:
-                    print("Left mouse button pressed")
-                elif event.button == 3:
-                    print("Right mouse button pressed")
+                segment_clicked = grid.mapPosToGridSegment(event.pos)
+                if segment_clicked:
+                    if event.button == 1:
+                        print(f"Left mouse button pressed on {segment_clicked.getPosition()}")
+                    elif event.button == 3:
+                        print(f"Right mouse button pressed on {segment_clicked.getPosition()}")
         screen.fill(COLOR_WHITE)
         grid.render()
         pygame.display.flip()
@@ -43,6 +45,9 @@ class siphonGrid():
     
     def init_grid(self):
 
+        # Generate grid container
+        self.grid_container = pygame.Rect(0, 0, 0, 0)
+
         # Generate grid squares
         grid = []
         for i in range(self.segments):
@@ -58,7 +63,7 @@ class siphonGrid():
         self.labels_columns = []
         self.labels_rows = []
         for i in range(self.segments):
-            self.labels_columns.append(self.font.render(chr(65+i), True, COLOR_BLACK))
+            self.labels_columns.append(self.font.render(encodeColumnNumber(i), True, COLOR_BLACK))
             self.labels_rows.append(self.font.render(str(self.segments-(i+1)), True, COLOR_BLACK))
 
         # Set class attribute and return grid
@@ -68,6 +73,7 @@ class siphonGrid():
     # Resize the grid according to the surface size
     def resize_grid(self):
         self.calcGrid()
+        self.grid_container.update(self.grid_left, self.grid_top, self.grid_size, self.grid_size)
         for i in range(self.segments):
             for j in range(self.segments):
                 self.grid[i][j].rect.update(
@@ -84,7 +90,10 @@ class siphonGrid():
         
         self.resize_grid()
 
+        pygame.draw.rect(self.screen, COLOR_BLACK, self.grid_container, 1)
+
         for i in range(self.segments):
+
             # Draw row labels
             label_top = (self.grid_top) + (self.grid_section_size - self.labels_rows[i].get_height()) / 2 + self.grid_section_size * i
             label_left = (self.grid_left) - (self.grid_section_size - self.labels_rows[i].get_width()) / 2
@@ -93,6 +102,8 @@ class siphonGrid():
             label_top = (self.grid_top + self.grid_size) + (self.grid_section_size - self.labels_columns[i].get_height()) / 4
             label_left = self.grid_left + (self.grid_section_size - self.labels_columns[i].get_width()) / 2 + self.grid_section_size * i
             self.screen.blit(self.labels_columns[i], (label_left, label_top))
+
+
             for j in range(self.segments):
                 if self.grid[i][j].blacked_out:
                     width = 0
@@ -109,11 +120,16 @@ class siphonGrid():
         self.grid_left = int(screen_smallest * (((100 - self.size) / 2) / 100))
         self.grid_top = int(screen_smallest * (((100 - self.size) / 2) / 100))
         self.grid_section_size = floor(self.grid_size / self.segments)
+        self.grid_size = self.grid_section_size * self.segments
     
-    # Check if position lies within grid and returns the siphonGridSegment it's inside if it is
+    # Check if position lies within grid and returns the siphonGridSegment it's inside if it is, if it's not then returns None
     def mapPosToGridSegment(self, position):
-        
-        
+        if self.grid_container.collidepoint(*position):
+            for i in range(self.segments):
+                for j in range(self.segments):
+                    if self.grid[i][j].rect.collidepoint(*position):
+                        return self.grid[i][j]
+        return None
 
 class siphonGridSegment():
     def __init__(self, position, rect: pygame.Rect = None, blacked_out = False) -> None:
@@ -122,6 +138,18 @@ class siphonGridSegment():
             rect = pygame.Rect(0, 0, 0, 0)
         self.rect = rect
         self.blacked_out = blacked_out
+    
+    def getPosition(self):
+        return (encodeColumnNumber(self.position[0]), self.position[1])
+    
+
+# function for encoding column number to letter
+def encodeColumnNumber(number):
+    return chr(65 + number)
+
+# function for encoding column number to letter
+def decodeColumnLetter(letter):
+    return ord(letter) - 65
 
 if __name__ == '__main__':
     main()
