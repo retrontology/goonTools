@@ -26,9 +26,9 @@ def main():
                 segment_clicked = grid.mapPosToGridSegment(event.pos)
                 if segment_clicked:
                     if event.button == 1:
-                        print(f"Left mouse button pressed on {segment_clicked.getEncodedPosition()}")
+                        segment_clicked.cycleResonator()
                     elif event.button == 3:
-                        print(f"Right mouse button pressed on {segment_clicked.getEncodedPosition()}")
+                        segment_clicked.resonator = None
         screen.fill(COLOR_WHITE)
         grid.render()
         pygame.display.flip()
@@ -147,9 +147,11 @@ class siphonGridSegment():
     def getEncodedPosition(self):
         return (encodeColumnNumber(self.position[0]), self.position[1])
     
-    def render(self, surface):
+    def render(self, surface: pygame.Surface):
         width = 0 if self.blacked_out else 1
-        pygame.draw.rect(surface, COLOR_BLACK, self.rect, width)
+        grid_square = pygame.draw.rect(surface, COLOR_BLACK, self.rect, width)
+        if self.resonator:
+            self.resonator.renderOnGridSegment(surface, grid_square)
 
 # Dummy parent class for resonators
 class resonator():
@@ -158,8 +160,10 @@ class resonator():
     def __init__(self) -> None:
         pass
     
-    def renderOnGridSegment(self, surface):
-        pass
+    def renderOnGridSegment(self, surface: pygame.Surface, grid_square:pygame.Rect):
+        top = grid_square.top + ((grid_square.height - self.text_render.get_height()) / 2)
+        left = grid_square.left + ((grid_square.width - self.text_render.get_width()) / 2)
+        surface.blit(self.text_render, (top, left))
 
 # Class for AX type resonators
 class resonatorAX(resonator):
