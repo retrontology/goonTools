@@ -30,7 +30,9 @@ def main():
                     elif event.button == 3:
                         segment_clicked.resonator = None
             elif event.type == pygame.MOUSEWHEEL:
-                print(event.x, event.y, pygame.mouse.get_pos())
+                segment_wheeled = grid.mapPosToGridSegment(pygame.mouse.get_pos())
+                if segment_wheeled and segment_wheeled.resonator:
+                    segment_wheeled.resonator.adjustIntensity(event.y)
         screen.fill(COLOR_WHITE)
         grid.render()
         pygame.display.flip()
@@ -158,24 +160,41 @@ class siphonGridSegment():
 # Dummy parent class for resonators
 class resonator():
     pygame.font.init()
-    font = pygame.font.Font(DEFAULT_FONT)
+    font_resonator = pygame.font.Font(DEFAULT_FONT)
+    font_intensity = pygame.font.Font(DEFAULT_FONT, 10)
+    intensity_font_map = [
+        font_intensity.render('0', True, COLOR_BLACK),
+        font_intensity.render('1', True, COLOR_BLACK),
+        font_intensity.render('2', True, COLOR_BLACK),
+        font_intensity.render('3', True, COLOR_BLACK),
+        font_intensity.render('4', True, COLOR_BLACK),
+    ]
+    intensity = 1
+
     def __init__(self) -> None:
         pass
+
+    def adjustIntensity(self, offset):
+        self.intensity = (self.intensity + offset) % 5
     
     def renderOnGridSegment(self, surface: pygame.Surface, grid_square:pygame.Rect):
-        top = grid_square.top + ((grid_square.height - self.text_render.get_height()) / 2)
-        left = grid_square.left + ((grid_square.width - self.text_render.get_width()) / 2)
-        surface.blit(self.text_render, (top, left))
+        type_top = grid_square.top + ((grid_square.height - self.text_render.get_height()) / 3)
+        type_left = grid_square.left + ((grid_square.width - self.text_render.get_width()) / 2)
+        surface.blit(self.text_render, (type_left, type_top))
+        intensity_render = resonator.intensity_font_map[self.intensity]
+        intensity_top = grid_square.top + ((grid_square.height - intensity_render.get_height()) / 3 * 2)
+        intensity_left = grid_square.left + ((grid_square.width - intensity_render.get_width()) / 2)
+        surface.blit(intensity_render, (intensity_left, intensity_top))
 
 # Class for AX type resonators
 class resonatorAX(resonator):
-    text_render = resonator.font.render('AX', True, COLOR_BLACK) 
+    text_render = resonator.font_resonator.render('AX', True, COLOR_BLACK) 
     def __init__(self) -> None:
         pass
 
 # Class for AX type resonators
 class resonatorSM(resonator):
-    text_render = resonator.font.render('SM', True, COLOR_BLACK) 
+    text_render = resonator.font_resonator.render('SM', True, COLOR_BLACK) 
     def __init__(self) -> None:
         pass
 
