@@ -37,28 +37,25 @@ class siphonGrid():
     
     def init_grid(self):
 
-        self.calcGrid()
-
+        # Generate grid squares
         grid = []
         for i in range(self.segments):
             grid.append(list())
             for j in range(self.segments):
-                grid[i].append(siphonGridSegment(pygame.Rect(
-                    self.grid_left + i * self.grid_section_size,
-                    self.grid_top + j * self.grid_section_size,
-                    self.grid_section_size,
-                    self.grid_section_size
-                )))
+                grid[i].append(siphonGridSegment())
 
+        # Black out the harmonic resonator squares
         grid[floor(self.segments/2)][floor(self.segments/2)].blacked_out = True
-        grid[floor(self.segments/2)][floor(self.segments/2)-1].blacked_out = True
+        grid[floor(self.segments/2)][floor(self.segments/2)+1].blacked_out = True
 
+        # Init labels
         self.labels_columns = []
         self.labels_rows = []
         for i in range(self.segments):
             self.labels_columns.append(self.font.render(chr(65+i), True, COLOR_BLACK))
-            self.labels_rows.append(self.font.render(str(i), True, COLOR_BLACK))
+            self.labels_rows.append(self.font.render(str(self.segments-(i+1)), True, COLOR_BLACK))
 
+        # Set class attribute and return grid
         self.grid = grid
         return grid
     
@@ -68,7 +65,7 @@ class siphonGrid():
             for j in range(self.segments):
                 self.grid[i][j].rect.update(
                     self.grid_left + i * self.grid_section_size,
-                    self.grid_top + j * self.grid_section_size,
+                    self.grid_top + self.grid_size - (j + 1) * self.grid_section_size,
                     self.grid_section_size,
                     self.grid_section_size
                 )
@@ -107,7 +104,9 @@ class siphonGrid():
         
 
 class siphonGridSegment():
-    def __init__(self, rect: pygame.Rect, blacked_out = False) -> None:
+    def __init__(self, rect: pygame.Rect = None, blacked_out = False) -> None:
+        if rect == None:
+            rect = pygame.Rect(0, 0, 0, 0)
         self.rect = rect
         self.blacked_out = blacked_out
 
