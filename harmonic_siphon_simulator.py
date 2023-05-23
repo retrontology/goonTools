@@ -90,7 +90,7 @@ class siphonGrid():
         
         self.resize_grid()
 
-        pygame.draw.rect(self.screen, COLOR_BLACK, self.grid_container, 1)
+        pygame.draw.rect(self.screen, COLOR_BLACK, self.grid_container, 2)
 
         for i in range(self.segments):
 
