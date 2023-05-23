@@ -29,6 +29,8 @@ def main():
                         segment_clicked.cycleResonator()
                     elif event.button == 3:
                         segment_clicked.resonator = None
+            elif event.type == pygame.MOUSEWHEEL:
+                print(event.x, event.y, pygame.mouse.get_pos())
         screen.fill(COLOR_WHITE)
         grid.render()
         pygame.display.flip()
