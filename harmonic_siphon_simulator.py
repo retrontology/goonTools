@@ -13,14 +13,20 @@ DEFAULT_FONT = pygame.font.get_default_font()
 
 def main():
     pygame.init()
-    size = width, height = 800, 600
+    size = 800, 600
     
     screen = pygame.display.set_mode(size, pygame.RESIZABLE)
     screen.fill(COLOR_WHITE)
     grid = siphonGrid(screen)
     while True:
         for event in pygame.event.get():
-            if event.type == pygame.QUIT: sys.exit()
+            if event.type == pygame.QUIT:
+                sys.exit()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    print("Left mouse button pressed")
+                elif event.button == 3:
+                    print("Right mouse button pressed")
         screen.fill(COLOR_WHITE)
         grid.render()
         pygame.display.flip()
@@ -42,7 +48,7 @@ class siphonGrid():
         for i in range(self.segments):
             grid.append(list())
             for j in range(self.segments):
-                grid[i].append(siphonGridSegment())
+                grid[i].append(siphonGridSegment((i, j)))
 
         # Black out the harmonic resonator squares
         grid[floor(self.segments/2)][floor(self.segments/2)].blacked_out = True
@@ -59,6 +65,7 @@ class siphonGrid():
         self.grid = grid
         return grid
     
+    # Resize the grid according to the surface size
     def resize_grid(self):
         self.calcGrid()
         for i in range(self.segments):
@@ -70,6 +77,7 @@ class siphonGrid():
                     self.grid_section_size
                 )
 
+    # Render the grid on the surface
     def render(self, screen: pygame.Surface = None):
         if screen:
             self.screen = screen
@@ -92,7 +100,7 @@ class siphonGrid():
                     width = 1
                 pygame.draw.rect(self.screen, COLOR_BLACK, self.grid[i][j].rect, width)
 
-    
+    # Calculate dimensions for grid based on surface
     def calcGrid(self):
         screen_height = self.screen.get_height()
         screen_width = self.screen.get_width()
@@ -101,10 +109,15 @@ class siphonGrid():
         self.grid_left = int(screen_smallest * (((100 - self.size) / 2) / 100))
         self.grid_top = int(screen_smallest * (((100 - self.size) / 2) / 100))
         self.grid_section_size = floor(self.grid_size / self.segments)
+    
+    # Check if position lies within grid and returns the siphonGridSegment it's inside if it is
+    def mapPosToGridSegment(self, position):
+        
         
 
 class siphonGridSegment():
-    def __init__(self, rect: pygame.Rect = None, blacked_out = False) -> None:
+    def __init__(self, position, rect: pygame.Rect = None, blacked_out = False) -> None:
+        self.position = position
         if rect == None:
             rect = pygame.Rect(0, 0, 0, 0)
         self.rect = rect
