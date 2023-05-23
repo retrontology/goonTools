@@ -26,9 +26,9 @@ def main():
                 segment_clicked = grid.mapPosToGridSegment(event.pos)
                 if segment_clicked:
                     if event.button == 1:
-                        print(f"Left mouse button pressed on {segment_clicked.getPosition()}")
+                        print(f"Left mouse button pressed on {segment_clicked.getEncodedPosition()}")
                     elif event.button == 3:
-                        print(f"Right mouse button pressed on {segment_clicked.getPosition()}")
+                        print(f"Right mouse button pressed on {segment_clicked.getEncodedPosition()}")
         screen.fill(COLOR_WHITE)
         grid.render()
         pygame.display.flip()
@@ -105,11 +105,7 @@ class siphonGrid():
 
 
             for j in range(self.segments):
-                if self.grid[i][j].blacked_out:
-                    width = 0
-                else:
-                    width = 1
-                pygame.draw.rect(self.screen, COLOR_BLACK, self.grid[i][j].rect, width)
+                self.grid[i][j].render(self.screen)
 
     # Calculate dimensions for grid based on surface
     def calcGrid(self):
@@ -138,10 +134,44 @@ class siphonGridSegment():
             rect = pygame.Rect(0, 0, 0, 0)
         self.rect = rect
         self.blacked_out = blacked_out
+        self.resonator = None
     
-    def getPosition(self):
+    def cycleResonator(self):
+        if self.resonator == None:
+            self.resonator = resonatorAX()
+        elif type(self.resonator) is resonatorAX:
+            self.resonator = resonatorSM()
+        elif type(self.resonator) is resonatorSM:
+            self.resonator = None
+    
+    def getEncodedPosition(self):
         return (encodeColumnNumber(self.position[0]), self.position[1])
     
+    def render(self, surface):
+        width = 0 if self.blacked_out else 1
+        pygame.draw.rect(surface, COLOR_BLACK, self.rect, width)
+
+# Dummy parent class for resonators
+class resonator():
+    pygame.font.init()
+    font = pygame.font.Font(DEFAULT_FONT)
+    def __init__(self) -> None:
+        pass
+    
+    def renderOnGridSegment(self, surface):
+        pass
+
+# Class for AX type resonators
+class resonatorAX(resonator):
+    text_render = resonator.font.render('AX', True, COLOR_BLACK) 
+    def __init__(self) -> None:
+        pass
+
+# Class for AX type resonators
+class resonatorSM(resonator):
+    text_render = resonator.font.render('SM', True, COLOR_BLACK) 
+    def __init__(self) -> None:
+        pass
 
 # function for encoding column number to letter
 def encodeColumnNumber(number):
