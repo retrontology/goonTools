@@ -8,6 +8,7 @@ from math import floor
 
 COLOR_BLACK = 0, 0, 0
 COLOR_WHITE = 255, 255, 255
+COLOR_GREY = 200, 200, 200
 
 GRID_SIZE_PERCENTAGE = 85
 SEGMENT_COUNT = 9
@@ -21,6 +22,10 @@ def main():
     screen.fill(COLOR_WHITE)
     grid = siphonGrid(screen)
     sidebar = gridSidebar(grid, screen)
+    buttons = [
+        sidebar.button_load,
+        sidebar.button_save
+    ]
     update_screen = True
     while True:
         event =  pygame.event.wait()
@@ -35,6 +40,10 @@ def main():
                 elif event.button == 3:
                     segment_clicked.resonator = None
                     update_screen = True
+            else:
+                for button in buttons:
+                    if button.rect.collidepoint(event.pos):
+                        button.click()
         elif event.type == pygame.MOUSEWHEEL:
             segment_wheeled = grid.mapPosToGridSegment(pygame.mouse.get_pos())
             if segment_wheeled and segment_wheeled.resonator:
@@ -272,6 +281,8 @@ class gridSidebar():
         self.label_vertical_resonance = self.font.render('Vertical Resonance: ', True, COLOR_BLACK)
         self.label_shear = self.font.render('Shear Value: ', True, COLOR_BLACK)
         self.label_eeu = self.font.render('EEU Per Cycle: ', True, COLOR_BLACK)
+        self.button_save = button('SAVE', saveFile, self.grid, self.screen)
+        self.button_load = button('LOAD', loadFile, self.grid, self.screen)
         
 
     def resizeSidebar(self):
@@ -285,6 +296,20 @@ class gridSidebar():
             container_top,
             container_width,
             container_height
+        )
+        button_height = 40
+        button_width = 120
+        self.button_save.rect.update(
+            container_left, 
+            container_top + container_height - button_height,
+            button_width,
+            button_height
+        )
+        self.button_load.rect.update(
+            self.button_save.rect.left + button_width*1.25, 
+            container_top + container_height - button_height,
+            button_width,
+            button_height
         )
     
     def render(self):
@@ -363,13 +388,48 @@ class gridSidebar():
             )
         )
 
+        # Buttons
+        self.button_load.render()
+        self.button_save.render()
+
+class button():
+
+    font = pygame.font.Font(DEFAULT_FONT, 24)
+
+    def __init__(self, text, callback, grid: siphonGrid, screen: pygame.Surface, rect: pygame.Rect = None) -> None:
+        self.text = text
+        self.callback = callback
+        self.grid = grid
+        self.screen = screen
+        self.text_render = button.font.render(self.text, True, COLOR_BLACK)
+        if rect == None:
+            self.rect = pygame.Rect(0, 0, 0, 0)
+        else:
+            self.rect = rect
+    
+    def render(self):
+        pygame.draw.rect(self.screen, COLOR_GREY, self.rect, 0)
+        pygame.draw.rect(self.screen, COLOR_BLACK, self.rect, 3)
+        text_top = self.rect.top + (self.rect.height - self.text_render.get_height()) / 2
+        text_left = self.rect.left + (self.rect.width - self.text_render.get_width()) / 2
+        self.screen.blit(self.text_render, (text_left, text_top))
+
+    def click(self):
+        self.callback(self.grid)
+
 # Function to pick a file for saving/loading
-def prompt_file():
+def promptFile():
     top = tkinter.Tk()
     top.withdraw()
     file_name = tkinter.filedialog.askopenfilename(parent=top)
     top.destroy()
     return file_name
+
+def saveFile(grid: siphonGrid):
+    print('you saved :)')
+
+def loadFile(grid: siphonGrid):
+    print('you loaded :)')
 
 # function for encoding column number to letter
 def encodeColumnNumber(number):
