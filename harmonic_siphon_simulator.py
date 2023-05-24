@@ -13,7 +13,7 @@ DEFAULT_FONT = pygame.font.get_default_font()
 
 def main():
     pygame.init()
-    size = 800, 600
+    size = 900, 600
     
     screen = pygame.display.set_mode(size, pygame.RESIZABLE)
     screen.fill(COLOR_WHITE)
@@ -46,7 +46,7 @@ class siphonGrid():
         self.screen = screen
         self.segments = segments
         self.size = size
-        self.font = pygame.font.Font(font, 12)
+        self.font = pygame.font.Font(font, 24)
         self.init_grid()
     
     def init_grid(self):
@@ -190,8 +190,8 @@ class siphonGridSegment():
 # Dummy parent class for resonators
 class resonator():
     pygame.font.init()
-    font_resonator = pygame.font.Font(DEFAULT_FONT, 12)
-    font_intensity = pygame.font.Font(DEFAULT_FONT, 10)
+    font_resonator = pygame.font.Font(DEFAULT_FONT, 16)
+    font_intensity = pygame.font.Font(DEFAULT_FONT, 14)
     intensity_font_map = [
         font_intensity.render('0', True, COLOR_BLACK),
         font_intensity.render('1', True, COLOR_BLACK),
@@ -223,15 +223,13 @@ class resonatorSM(resonator):
 
 class gridSidebar():
 
-    font = pygame.font.Font(DEFAULT_FONT, 16)
-
     def __init__(self, grid: siphonGrid, screen: pygame.Surface) -> None:
         self.grid = grid
         self.screen = screen
         self.initSidebar()
     
     def initSidebar(self):
-        self.font = pygame.font.Font(DEFAULT_FONT, 16)
+        self.font = pygame.font.Font(DEFAULT_FONT, 20)
         self.container = pygame.Rect(0, 0, 0, 0)
         self.label_vertical_resonance = self.font.render('Vertical Resonance: ', True, COLOR_BLACK)
         self.label_lateral_resonance = self.font.render('Lateral Resonance: ', True, COLOR_BLACK)
