@@ -1,5 +1,7 @@
 import pygame
 import sys
+import tkinter
+import tkinter.filedialog
 from math import floor
 
 ### Font size converstion: 4px = 3pt
@@ -361,6 +363,13 @@ class gridSidebar():
             )
         )
 
+# Function to pick a file for saving/loading
+def prompt_file():
+    top = tkinter.Tk()
+    top.withdraw()
+    file_name = tkinter.filedialog.askopenfilename(parent=top)
+    top.destroy()
+    return file_name
 
 # function for encoding column number to letter
 def encodeColumnNumber(number):
