@@ -225,7 +225,6 @@ class resonator():
     font_resonator = pygame.font.Font(DEFAULT_FONT, 16)
     font_intensity = pygame.font.Font(DEFAULT_FONT, 14)
     intensity_font_map = [
-        font_intensity.render('0', True, COLOR_BLACK),
         font_intensity.render('1', True, COLOR_BLACK),
         font_intensity.render('2', True, COLOR_BLACK),
         font_intensity.render('3', True, COLOR_BLACK),
@@ -234,13 +233,15 @@ class resonator():
     intensity = 1
 
     def adjustIntensity(self, offset):
-        self.intensity = (self.intensity + offset) % 5
+        self.intensity = self.intensity + offset
+        if self.intensity > 4: self.intensity = 4
+        if self.intensity < 1: self.intensity = 1
     
     def renderOnGridSegment(self, surface: pygame.Surface, grid_square:pygame.Rect):
         type_top = grid_square.top + ((grid_square.height - self.text_render.get_height()) / 3)
         type_left = grid_square.left + ((grid_square.width - self.text_render.get_width()) / 2)
         surface.blit(self.text_render, (type_left, type_top))
-        intensity_render = resonator.intensity_font_map[self.intensity]
+        intensity_render = resonator.intensity_font_map[self.intensity-1]
         intensity_top = grid_square.top + ((grid_square.height - intensity_render.get_height()) / 3 * 2)
         intensity_left = grid_square.left + ((grid_square.width - intensity_render.get_width()) / 2)
         surface.blit(intensity_render, (intensity_left, intensity_top))
