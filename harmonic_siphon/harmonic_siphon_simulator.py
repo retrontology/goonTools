@@ -234,7 +234,7 @@ class resonator():
 
     def adjustIntensity(self, offset):
         self.intensity = self.intensity + offset
-        if self.intensity > 4: self.intensity = 4
+        if self.intensity > self.max_intensity: self.intensity = self.max_intensity
         if self.intensity < 1: self.intensity = 1
     
     def renderOnGridSegment(self, surface: pygame.Surface, grid_square:pygame.Rect):
@@ -248,11 +248,13 @@ class resonator():
 
 # Class for AX type resonators
 class resonatorAX(resonator):
-    text_render = resonator.font_resonator.render('AX', True, COLOR_BLACK) 
+    text_render = resonator.font_resonator.render('AX', True, COLOR_BLACK)
+    max_intensity = 4
 
 # Class for AX type resonators
 class resonatorSM(resonator):
-    text_render = resonator.font_resonator.render('SM', True, COLOR_BLACK) 
+    text_render = resonator.font_resonator.render('SM', True, COLOR_BLACK)
+    max_intensity = 3
 
 class gridSidebar():
 
