@@ -55,11 +55,24 @@ class siphonGrid():
         self.grid_container = pygame.Rect(0, 0, 0, 0)
 
         # Generate grid squares
+        grid_midpoint = floor(self.segments/2)
         grid = []
         for i in range(self.segments):
+            if grid_midpoint == i:
+                lateral_offset = 0
+            else:
+                lateral_polarity = (i - grid_midpoint) / abs((i - grid_midpoint))
+                lateral_distance = abs(i - grid_midpoint)
+                lateral_offset = lateral_polarity * (2 ** abs(grid_midpoint-lateral_distance))
             grid.append(list())
             for j in range(self.segments):
-                grid[i].append(siphonGridSegment((i, j)))
+                if grid_midpoint == j:
+                    vertical_offset = 0
+                else:
+                    vertical_polarity = (j - grid_midpoint) / abs((j - grid_midpoint))
+                    vertical_distance = abs(j - grid_midpoint)
+                    vertical_offset = vertical_polarity * (2 ** abs(grid_midpoint-vertical_distance))
+                grid[i].append(siphonGridSegment((i, j), vertical_offset, lateral_offset))
 
         # Black out the harmonic resonator squares
         grid[floor(self.segments/2)][floor(self.segments/2)].blacked_out = True
@@ -121,18 +134,21 @@ class siphonGrid():
             label_left = self.grid_container.left + (self.grid_section_size - self.labels_columns[i].get_width()) / 2 + self.grid_section_size * i
             self.screen.blit(self.labels_columns[i], (label_left, label_top))
 
-
             for j in range(self.segments):
                 self.grid[i][j].render(self.screen)
             
-            self.calcGrid()
+        self.calcGrid()
 
     # Calculate resonance variables
     def calcGrid(self):
+        self.lateral_resonance = 0
+        self.vertical_resonance = 0
+        self.shear = 0
         for i in range(self.segments):
             for j in range(self.segments):
                 if self.grid[i][j].resonator:
-                    resonator = self.grid[i][j].resonator
+                    self.lateral_resonance += (self.grid[i][j].lateral_offset * self.grid[i][j].resonator.intensity)
+                    self.vertical_resonance += (self.grid[i][j].vertical_offset * self.grid[i][j].resonator.intensity)
     
     # Check if position lies within grid and returns the siphonGridSegment it's inside if it is, if it's not then returns None
     def mapPosToGridSegment(self, position):
@@ -144,8 +160,10 @@ class siphonGrid():
         return None
 
 class siphonGridSegment():
-    def __init__(self, position, rect: pygame.Rect = None, blacked_out = False) -> None:
+    def __init__(self, position, vertical_offset, lateral_offset, rect: pygame.Rect = None, blacked_out = False) -> None:
         self.position = position
+        self.vertical_offset = vertical_offset
+        self.lateral_offset = lateral_offset
         if rect == None:
             rect = pygame.Rect(0, 0, 0, 0)
         self.rect = rect
@@ -183,9 +201,6 @@ class resonator():
     ]
     intensity = 1
 
-    def __init__(self) -> None:
-        pass
-
     def adjustIntensity(self, offset):
         self.intensity = (self.intensity + offset) % 5
     
@@ -201,14 +216,10 @@ class resonator():
 # Class for AX type resonators
 class resonatorAX(resonator):
     text_render = resonator.font_resonator.render('AX', True, COLOR_BLACK) 
-    def __init__(self) -> None:
-        pass
 
 # Class for AX type resonators
 class resonatorSM(resonator):
     text_render = resonator.font_resonator.render('SM', True, COLOR_BLACK) 
-    def __init__(self) -> None:
-        pass
 
 class gridSidebar():
 
