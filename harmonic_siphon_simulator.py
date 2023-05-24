@@ -149,6 +149,9 @@ class siphonGrid():
                 if self.grid[i][j].resonator:
                     self.lateral_resonance += (self.grid[i][j].lateral_offset * self.grid[i][j].resonator.intensity)
                     self.vertical_resonance += (self.grid[i][j].vertical_offset * self.grid[i][j].resonator.intensity)
+        self.lateral_resonance = int(self.lateral_resonance)
+        self.vertical_resonance = int(self.vertical_resonance)
+        self.shear = int(self.shear)
     
     # Check if position lies within grid and returns the siphonGridSegment it's inside if it is, if it's not then returns None
     def mapPosToGridSegment(self, position):
@@ -171,12 +174,15 @@ class siphonGridSegment():
         self.resonator = None
     
     def cycleResonator(self):
-        if self.resonator == None:
-            self.resonator = resonatorAX()
-        elif type(self.resonator) is resonatorAX:
-            self.resonator = resonatorSM()
-        elif type(self.resonator) is resonatorSM:
+        if self.blacked_out:
             self.resonator = None
+        else:
+            if self.resonator == None:
+                self.resonator = resonatorAX()
+            elif type(self.resonator) is resonatorAX:
+                self.resonator = resonatorSM()
+            elif type(self.resonator) is resonatorSM:
+                self.resonator = None
     
     def getEncodedPosition(self):
         return (encodeColumnNumber(self.position[0]), self.position[1])
