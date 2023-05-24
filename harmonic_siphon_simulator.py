@@ -19,25 +19,33 @@ def main():
     screen.fill(COLOR_WHITE)
     grid = siphonGrid(screen)
     sidebar = gridSidebar(grid, screen)
+    update_screen = True
     while True:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                sys.exit()
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                segment_clicked = grid.mapPosToGridSegment(event.pos)
-                if segment_clicked:
-                    if event.button == 1:
-                        segment_clicked.cycleResonator()
-                    elif event.button == 3:
-                        segment_clicked.resonator = None
-            elif event.type == pygame.MOUSEWHEEL:
-                segment_wheeled = grid.mapPosToGridSegment(pygame.mouse.get_pos())
-                if segment_wheeled and segment_wheeled.resonator:
-                    segment_wheeled.resonator.adjustIntensity(event.y)
-        screen.fill(COLOR_WHITE)
-        grid.render()
-        sidebar.render()
-        pygame.display.flip()
+        event =  pygame.event.wait()
+        if event.type == pygame.QUIT:
+            sys.exit()
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            segment_clicked = grid.mapPosToGridSegment(event.pos)
+            if segment_clicked:
+                if event.button == 1:
+                    segment_clicked.cycleResonator()
+                    update_screen = True
+                elif event.button == 3:
+                    segment_clicked.resonator = None
+                    update_screen = True
+        elif event.type == pygame.MOUSEWHEEL:
+            segment_wheeled = grid.mapPosToGridSegment(pygame.mouse.get_pos())
+            if segment_wheeled and segment_wheeled.resonator:
+                segment_wheeled.resonator.adjustIntensity(event.y)
+                update_screen = True
+        elif event.type == pygame.VIDEORESIZE:
+            update_screen = True
+        if update_screen:
+            screen.fill(COLOR_WHITE)
+            grid.render()
+            sidebar.render()
+            pygame.display.flip()
+            update_screen = False
     
 
 class siphonGrid():
