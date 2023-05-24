@@ -2,6 +2,7 @@ import pygame
 import sys
 import tkinter
 import tkinter.filedialog
+import tkinter.messagebox
 from math import floor
 
 ### Font size converstion: 4px = 3pt
@@ -44,6 +45,7 @@ def main():
                 for button in buttons:
                     if button.rect.collidepoint(event.pos):
                         button.click()
+                        update_screen = True
         elif event.type == pygame.MOUSEWHEEL:
             segment_wheeled = grid.mapPosToGridSegment(pygame.mouse.get_pos())
             if segment_wheeled and segment_wheeled.resonator:
@@ -57,7 +59,6 @@ def main():
             sidebar.render()
             pygame.display.flip()
             update_screen = False
-    
 
 class siphonGrid():
 
@@ -66,9 +67,9 @@ class siphonGrid():
         self.segments = segments
         self.size = size
         self.font = pygame.font.Font(font, 24)
-        self.init_grid()
+        self.initGrid()
     
-    def init_grid(self):
+    def initGrid(self):
 
         # Generate grid container
         self.grid_container = pygame.Rect(0, 0, 0, 0)
@@ -115,7 +116,7 @@ class siphonGrid():
         return grid
     
     # Resize the grid according to the surface size
-    def resize_grid(self):
+    def resizeGrid(self):
         screen_height = self.screen.get_height()
         screen_width = self.screen.get_width()
         screen_smallest = screen_height if screen_height < screen_width else screen_width
@@ -139,7 +140,7 @@ class siphonGrid():
         if screen:
             self.screen = screen
         
-        self.resize_grid()
+        self.resizeGrid()
 
         pygame.draw.rect(self.screen, COLOR_BLACK, self.grid_container, 2)
 
@@ -198,6 +199,38 @@ class siphonGrid():
                     if self.grid[i][j].rect.collidepoint(*position):
                         return self.grid[i][j]
         return None
+
+    def serializeGrid(self):
+        output = ''
+        for i in range(self.segments):
+                for j in range(self.segments):
+                    if self.grid[i][j].resonator:
+                        if type(self.grid[i][j].resonator) == resonatorAX:
+                            resonator_type = 'AX'
+                        elif type(self.grid[i][j].resonator) == resonatorSM:
+                            resonator_type = 'SM'
+                        output += f'Type-{resonator_type}, Position {encodeColumnNumber(i)}{j}, {self.grid[i][j].resonator.intensity} intensity\n'
+        return output
+
+    def deserializeGrid(self, string: str):
+        self.initGrid()
+        for line in string.splitlines():
+            if line:
+                resonator_type, position, intensity = line.split(',')
+
+                resonator_type = resonator_type.strip()[-2:]
+                if resonator_type.lower() == 'ax':
+                    resonator_type = resonatorAX
+                elif resonator_type.lower() == 'sm':
+                    resonator_type = resonatorSM
+
+                position = position.strip()[-2:]
+                position = (decodeColumnLetter(position[0]), int(position[1]))
+
+                intensity = int(intensity.strip()[:1])
+
+                self.grid[position[0]][position[1]].resonator = resonator_type()
+                self.grid[position[0]][position[1]].resonator.intensity = intensity
 
 class siphonGridSegment():
     def __init__(self, position, vertical_offset, lateral_offset, rect: pygame.Rect = None, blacked_out = False) -> None:
@@ -418,18 +451,46 @@ class button():
         self.callback(self.grid)
 
 # Function to pick a file for saving/loading
-def promptFile():
+def promptOpenFile():
     top = tkinter.Tk()
     top.withdraw()
     file_name = tkinter.filedialog.askopenfilename(parent=top)
     top.destroy()
     return file_name
 
+def promptSaveFile():
+    top = tkinter.Tk()
+    top.withdraw()
+    file_name = tkinter.filedialog.asksaveasfilename(
+        parent=top,
+        confirmoverwrite=True,
+        defaultextension='hss'
+    )
+    top.destroy()
+    return file_name
+
+def notify(string, header = None):
+    top = tkinter.Tk()
+    top.withdraw()
+    tkinter.messagebox.showinfo(header, string)
+
 def saveFile(grid: siphonGrid):
-    print('you saved :)')
+    save_file = promptSaveFile()
+    if save_file:
+        try:
+            with open(save_file, 'w') as grid_outfile:
+                grid_outfile.write(grid.serializeGrid())
+        except Exception as e:
+            notify(e, 'Failed to save file')
 
 def loadFile(grid: siphonGrid):
-    print('you loaded :)')
+    open_file = promptOpenFile()
+    if open_file:
+        try:
+            with open(open_file, 'r') as grid_infile:
+                grid.deserializeGrid(grid_infile.read())
+        except Exception as e:
+            notify(e, 'Failed to load file')
 
 # function for encoding column number to letter
 def encodeColumnNumber(number):
