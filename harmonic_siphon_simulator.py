@@ -18,6 +18,7 @@ def main():
     screen = pygame.display.set_mode(size, pygame.RESIZABLE)
     screen.fill(COLOR_WHITE)
     grid = siphonGrid(screen)
+    sidebar = gridSidebar(grid, screen)
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -35,6 +36,7 @@ def main():
                     segment_wheeled.resonator.adjustIntensity(event.y)
         screen.fill(COLOR_WHITE)
         grid.render()
+        sidebar.render()
         pygame.display.flip()
     
 
@@ -44,8 +46,8 @@ class siphonGrid():
         self.screen = screen
         self.segments = segments
         self.size = size
-        self.font = pygame.font.Font(font)
-        self.init_grid() 
+        self.font = pygame.font.Font(font, 12)
+        self.init_grid()
     
     def init_grid(self):
 
@@ -70,19 +72,31 @@ class siphonGrid():
             self.labels_columns.append(self.font.render(encodeColumnNumber(i), True, COLOR_BLACK))
             self.labels_rows.append(self.font.render(str(self.segments-(i+1)), True, COLOR_BLACK))
 
+        # Init resonance variables
+        self.vertical_resonance = 0
+        self.lateral_resonance = 0
+        self.shear = 0
+
         # Set class attribute and return grid
         self.grid = grid
         return grid
     
     # Resize the grid according to the surface size
     def resize_grid(self):
-        self.calcGrid()
-        self.grid_container.update(self.grid_left, self.grid_top, self.grid_size, self.grid_size)
+        screen_height = self.screen.get_height()
+        screen_width = self.screen.get_width()
+        screen_smallest = screen_height if screen_height < screen_width else screen_width
+        grid_size = int(screen_smallest * self.size / 100)
+        grid_left = int(screen_smallest * (((100 - self.size) / 2) / 100))
+        grid_top = int(screen_smallest * (((100 - self.size) / 2) / 100))
+        self.grid_section_size = floor(grid_size / self.segments)
+        grid_size = self.grid_section_size * self.segments
+        self.grid_container.update(grid_left, grid_top, grid_size, grid_size)
         for i in range(self.segments):
             for j in range(self.segments):
                 self.grid[i][j].rect.update(
-                    self.grid_left + i * self.grid_section_size,
-                    self.grid_top + self.grid_size - (j + 1) * self.grid_section_size,
+                    grid_left + i * self.grid_section_size,
+                    grid_top + grid_size - (j + 1) * self.grid_section_size,
                     self.grid_section_size,
                     self.grid_section_size
                 )
@@ -99,28 +113,26 @@ class siphonGrid():
         for i in range(self.segments):
 
             # Draw row labels
-            label_top = (self.grid_top) + (self.grid_section_size - self.labels_rows[i].get_height()) / 2 + self.grid_section_size * i
-            label_left = (self.grid_left) - (self.grid_section_size - self.labels_rows[i].get_width()) / 2
+            label_top = (self.grid_container.top) + (self.grid_section_size - self.labels_rows[i].get_height()) / 2 + self.grid_section_size * i
+            label_left = (self.grid_container.left) - (self.grid_section_size - self.labels_rows[i].get_width()) / 2
             self.screen.blit(self.labels_rows[i], (label_left, label_top))
             # Draw column labels
-            label_top = (self.grid_top + self.grid_size) + (self.grid_section_size - self.labels_columns[i].get_height()) / 4
-            label_left = self.grid_left + (self.grid_section_size - self.labels_columns[i].get_width()) / 2 + self.grid_section_size * i
+            label_top = (self.grid_container.top + self.grid_container.width) + (self.grid_section_size - self.labels_columns[i].get_height()) / 4
+            label_left = self.grid_container.left + (self.grid_section_size - self.labels_columns[i].get_width()) / 2 + self.grid_section_size * i
             self.screen.blit(self.labels_columns[i], (label_left, label_top))
 
 
             for j in range(self.segments):
                 self.grid[i][j].render(self.screen)
+            
+            self.calcGrid()
 
-    # Calculate dimensions for grid based on surface
+    # Calculate resonance variables
     def calcGrid(self):
-        screen_height = self.screen.get_height()
-        screen_width = self.screen.get_width()
-        screen_smallest = screen_height if screen_height < screen_width else screen_width
-        self.grid_size = int(screen_smallest * self.size / 100)
-        self.grid_left = int(screen_smallest * (((100 - self.size) / 2) / 100))
-        self.grid_top = int(screen_smallest * (((100 - self.size) / 2) / 100))
-        self.grid_section_size = floor(self.grid_size / self.segments)
-        self.grid_size = self.grid_section_size * self.segments
+        for i in range(self.segments):
+            for j in range(self.segments):
+                if self.grid[i][j].resonator:
+                    resonator = self.grid[i][j].resonator
     
     # Check if position lies within grid and returns the siphonGridSegment it's inside if it is, if it's not then returns None
     def mapPosToGridSegment(self, position):
@@ -160,7 +172,7 @@ class siphonGridSegment():
 # Dummy parent class for resonators
 class resonator():
     pygame.font.init()
-    font_resonator = pygame.font.Font(DEFAULT_FONT)
+    font_resonator = pygame.font.Font(DEFAULT_FONT, 12)
     font_intensity = pygame.font.Font(DEFAULT_FONT, 10)
     intensity_font_map = [
         font_intensity.render('0', True, COLOR_BLACK),
@@ -197,6 +209,94 @@ class resonatorSM(resonator):
     text_render = resonator.font_resonator.render('SM', True, COLOR_BLACK) 
     def __init__(self) -> None:
         pass
+
+class gridSidebar():
+
+    font = pygame.font.Font(DEFAULT_FONT, 16)
+
+    def __init__(self, grid: siphonGrid, screen: pygame.Surface) -> None:
+        self.grid = grid
+        self.screen = screen
+        self.initSidebar()
+    
+    def initSidebar(self):
+        self.font = pygame.font.Font(DEFAULT_FONT, 16)
+        self.container = pygame.Rect(0, 0, 0, 0)
+        self.label_vertical_resonance = self.font.render('Vertical Resonance: ', True, COLOR_BLACK)
+        self.label_lateral_resonance = self.font.render('Lateral Resonance: ', True, COLOR_BLACK)
+        self.label_shear = self.font.render('Shear: ', True, COLOR_BLACK)
+
+    def resizeSidebar(self):
+        screen_width = self.screen.get_width()
+        container_top = self.grid.grid_container.top
+        container_left = self.grid.grid_container.left * 2 + self.grid.grid_container.width
+        container_height = self.grid.grid_container.height
+        container_width = screen_width - (self.grid.grid_container.left * 3 + self.grid.grid_container.width)
+        self.container.update(
+            container_left,
+            container_top,
+            container_width,
+            container_height
+        )
+    
+    def render(self):
+        self.resizeSidebar()
+        #pygame.draw.rect(self.screen, COLOR_BLACK, self.container, 2)
+
+        # Vertical resonance label
+        vertical_resonance_rect = self.screen.blit(
+            self.label_vertical_resonance, 
+            (self.container.left, self.container.top + 20)
+        )
+        vertical_resonance_render = self.font.render(
+            str(self.grid.vertical_resonance),
+            True,
+            COLOR_BLACK
+        )
+        self.screen.blit(
+            vertical_resonance_render,
+            (
+                vertical_resonance_rect.left + vertical_resonance_rect.width,
+                vertical_resonance_rect.top 
+            )
+        )
+        
+        # Lateral resonance label
+        lateral_resonance_rect = self.screen.blit(
+            self.label_lateral_resonance, 
+            (self.container.left, self.container.top + 20 * 2)
+        )
+        lateral_resonance_render = self.font.render(
+            str(self.grid.lateral_resonance),
+            True,
+            COLOR_BLACK
+        )
+        self.screen.blit(
+            lateral_resonance_render,
+            (
+                lateral_resonance_rect.left + lateral_resonance_rect.width,
+                lateral_resonance_rect.top 
+            )
+        )
+
+        # Shear label
+        shear_rect = self.screen.blit(
+            self.label_shear, 
+            (self.container.left, self.container.top + 20 * 3)
+        )
+        shear_render = self.font.render(
+            str(self.grid.shear),
+            True,
+            COLOR_BLACK
+        )
+        self.screen.blit(
+            shear_render,
+            (
+                shear_rect.left + shear_rect.width,
+                shear_rect.top 
+            )
+        )
+
 
 # function for encoding column number to letter
 def encodeColumnNumber(number):
