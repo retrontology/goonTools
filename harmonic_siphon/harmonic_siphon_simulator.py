@@ -150,18 +150,34 @@ class siphonGrid():
 
     # Calculate resonance variables
     def calcGrid(self):
-        self.lateral_resonance = 0
-        self.vertical_resonance = 0
-        self.shear = 0
+        lateral_positive = 0
+        lateral_negative = 0
+        vertical_positive = 0
+        vertical_negative = 0
+        shear_mitigation = 0
+        eeu = 0
         for i in range(self.segments):
             for j in range(self.segments):
-                if self.grid[i][j].resonator:
-                    self.lateral_resonance += (self.grid[i][j].lateral_offset * self.grid[i][j].resonator.intensity)
-                    self.vertical_resonance += (self.grid[i][j].vertical_offset * self.grid[i][j].resonator.intensity)
-        self.lateral_resonance = int(self.lateral_resonance)
-        self.vertical_resonance = int(self.vertical_resonance)
-        self.shear = int(self.shear)
-        self.eeu = int(self.eeu)
+                grid_square = self.grid[i][j]
+                if grid_square.resonator:
+                    if type(grid_square.resonator) == resonatorAX:
+                        if grid_square.lateral_offset < 0:
+                            lateral_negative -= grid_square.lateral_offset * grid_square.resonator.intensity
+                        else:
+                            lateral_positive += grid_square.lateral_offset * grid_square.resonator.intensity
+                        if grid_square.vertical_offset < 0:
+                            vertical_negative -= grid_square.vertical_offset * grid_square.resonator.intensity
+                        else:
+                            vertical_positive += grid_square.vertical_offset * grid_square.resonator.intensity
+                    elif type(grid_square.resonator) == resonatorSM:
+                        mitigation_offset = max(abs(grid_square.lateral_offset), abs(grid_square.vertical_offset))
+                        shear_mitigation += mitigation_offset * grid_square.resonator.intensity
+                    eeu += grid_square.resonator.intensity
+        self.lateral_resonance = int(lateral_positive - lateral_negative)
+        self.vertical_resonance = int(vertical_positive - vertical_negative)
+        self.shear = int(min(lateral_positive, lateral_negative) + min(vertical_positive, vertical_negative)) * 2 - int(shear_mitigation)
+        if self.shear < 0: self.shear = 0
+        self.eeu = int(eeu)
     
     # Check if position lies within grid and returns the siphonGridSegment it's inside if it is, if it's not then returns None
     def mapPosToGridSegment(self, position):
