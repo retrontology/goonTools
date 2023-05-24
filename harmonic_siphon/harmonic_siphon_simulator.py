@@ -97,6 +97,7 @@ class siphonGrid():
         self.vertical_resonance = 0
         self.lateral_resonance = 0
         self.shear = 0
+        self.eeu = 0
 
         # Set class attribute and return grid
         self.grid = grid
@@ -160,6 +161,7 @@ class siphonGrid():
         self.lateral_resonance = int(self.lateral_resonance)
         self.vertical_resonance = int(self.vertical_resonance)
         self.shear = int(self.shear)
+        self.eeu = int(self.eeu)
     
     # Check if position lies within grid and returns the siphonGridSegment it's inside if it is, if it's not then returns None
     def mapPosToGridSegment(self, position):
@@ -245,9 +247,11 @@ class gridSidebar():
     def initSidebar(self):
         self.font = pygame.font.Font(DEFAULT_FONT, 20)
         self.container = pygame.Rect(0, 0, 0, 0)
-        self.label_vertical_resonance = self.font.render('Vertical Resonance: ', True, COLOR_BLACK)
         self.label_lateral_resonance = self.font.render('Lateral Resonance: ', True, COLOR_BLACK)
-        self.label_shear = self.font.render('Shear: ', True, COLOR_BLACK)
+        self.label_vertical_resonance = self.font.render('Vertical Resonance: ', True, COLOR_BLACK)
+        self.label_shear = self.font.render('Shear Value: ', True, COLOR_BLACK)
+        self.label_eeu = self.font.render('EEU Per Cycle: ', True, COLOR_BLACK)
+        
 
     def resizeSidebar(self):
         screen_width = self.screen.get_width()
@@ -266,28 +270,10 @@ class gridSidebar():
         self.resizeSidebar()
         #pygame.draw.rect(self.screen, COLOR_BLACK, self.container, 2)
 
-        # Vertical resonance label
-        vertical_resonance_rect = self.screen.blit(
-            self.label_vertical_resonance, 
-            (self.container.left, self.container.top + 20)
-        )
-        vertical_resonance_render = self.font.render(
-            str(self.grid.vertical_resonance),
-            True,
-            COLOR_BLACK
-        )
-        self.screen.blit(
-            vertical_resonance_render,
-            (
-                vertical_resonance_rect.left + vertical_resonance_rect.width,
-                vertical_resonance_rect.top 
-            )
-        )
-        
         # Lateral resonance label
         lateral_resonance_rect = self.screen.blit(
             self.label_lateral_resonance, 
-            (self.container.left, self.container.top + 20 * 2)
+            (self.container.left, self.container.top + 20)
         )
         lateral_resonance_render = self.font.render(
             str(self.grid.lateral_resonance),
@@ -302,6 +288,24 @@ class gridSidebar():
             )
         )
 
+        # Vertical resonance label
+        vertical_resonance_rect = self.screen.blit(
+            self.label_vertical_resonance, 
+            (self.container.left, self.container.top + 20 * 2)
+        )
+        vertical_resonance_render = self.font.render(
+            str(self.grid.vertical_resonance),
+            True,
+            COLOR_BLACK
+        )
+        self.screen.blit(
+            vertical_resonance_render,
+            (
+                vertical_resonance_rect.left + vertical_resonance_rect.width,
+                vertical_resonance_rect.top 
+            )
+        )
+        
         # Shear label
         shear_rect = self.screen.blit(
             self.label_shear, 
@@ -317,6 +321,24 @@ class gridSidebar():
             (
                 shear_rect.left + shear_rect.width,
                 shear_rect.top 
+            )
+        )
+
+        # EEU label
+        eeu_rect = self.screen.blit(
+            self.label_eeu, 
+            (self.container.left, self.container.top + 20 * 4)
+        )
+        eeu_render = self.font.render(
+            str(self.grid.eeu),
+            True,
+            COLOR_BLACK
+        )
+        self.screen.blit(
+            eeu_render,
+            (
+                eeu_rect.left + eeu_rect.width,
+                eeu_rect.top 
             )
         )
 
