@@ -1,0 +1,1 @@
+pyinstaller.exe -F --collect-submodules mido.backends .\piano_midi_player.py

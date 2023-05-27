@@ -1,6 +1,5 @@
 import mido
 from pynput import keyboard
-from threading import Thread
 from time import sleep
 
 KEYMAP="1!2@34$5%6^78*9(0qQwWeErtTyYuiIoOpPasSdDfgGhHjJklLzZxcCvVbBnm"
@@ -38,6 +37,7 @@ def play_midi_file(file):
 
 def capture_input_port(name=None):
     inport = mido.open_input(name, callback=map_message_to_key)
+    print('The midi mapper is now running. Either close this window or type Ctrl+C to exit...')
     while True:
         sleep(60)
 
