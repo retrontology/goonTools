@@ -1,6 +1,6 @@
 ## piano_midi
 ### Description
-This is a simple script that listens to a specified MIDI port and translates notes to keybind for the instruments in Goonstation SS13. This is not something that can be used as a standalone. You'll either need a MIDI device connected to your computer in order to play live music or a virtual MIDI loopback device in conjuction with a MIDI player. For the latter, I personally use [loopMIDI](https://www.tobias-erichsen.de/software/loopmidi.html) for the MIDI loopback device and [Midi Player](https://falcosoft.hu/softwares.html#midiplayer) for the player.
+This is a simple script that listens to a specified MIDI port and translates notes to keybind for the instruments in Goonstation SS13. This is not something that can be used as a standalone. You'll either need a MIDI device connected to your computer in order to play live music or a software based MIDI player. For the latter, I personally use [Midi Player](https://falcosoft.hu/softwares.html#midiplayer).
 Note: the piano window needs to be in focus/the last window you clicked on in order for the keybinds to work.
 
 ### Installation
@@ -14,5 +14,14 @@ Change the `MIDI_PORT' constanst in the script to the name of the MIDI device yo
 
 Run the script with the following command:
 ```
-python piano_midi_player.py
+piano_midi_player [-h] [-d DEVICE] [-o OFFSET] [-k KEYMAP]
+
+options:
+  -h, --help            show this help message and exit
+  -d DEVICE, --device DEVICE
+                        The MIDI device you want to listen to. If left blank a device will be created.
+  -o OFFSET, --offset OFFSET
+                        The middle C offset (default is 36)
+  -k KEYMAP, --keymap KEYMAP
+                        The string of keys to map
 ```
