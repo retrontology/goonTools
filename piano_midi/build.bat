@@ -1,1 +1,1 @@
-pyinstaller.exe -F --collect-submodules mido.backends .\piano_midi_player.py
+pyinstaller.exe -F --collect-all python-rtmidi --collect-submodules comtypes --collect-submodules pytemidi --collect-submodules mido.backends .\piano_midi_player.py
