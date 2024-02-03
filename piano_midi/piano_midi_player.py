@@ -3,10 +3,12 @@ from pynput import keyboard
 from time import sleep
 import argparse
 from functools import partial
+import pytemidi
+
 
 KEYMAP="1!2@34$5%6^78*9(0qQwWeErtTyYuiIoOpPasSdDfgGhHjJklLzZxcCvVbBnm"
-DEFAULT_MIDI_PORT='loopMIDI Port 0'
 MIDDLE_C_OFFSET=36
+INTERNAL_DEVICE_NAME='GoonMidi'
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -15,8 +17,8 @@ def parse_args():
     )
     parser.add_argument(
         '-d', '--device',
-        default=DEFAULT_MIDI_PORT,
-        help=f'The MIDI device you want to listen to (default i {DEFAULT_MIDI_PORT})'
+        default=None,
+        help=f'The MIDI device you want to listen to. If left blank a device will be created.'
     )
     parser.add_argument(
         '-o', '--offset',
@@ -65,10 +67,28 @@ def capture_input_port(name, keymap, offset):
             sleep(60)
     except KeyboardInterrupt as e:
         print('Goodbye!')
+        
+def get_full_device_name(devices, target):
+    for i in range(len(devices)):
+        if target == devices[i][0:-len(f' i')]:
+            return devices[i]
+    else:
+        return None
 
 def main():
     args = parse_args()
-    capture_input_port(args.device, args.keymap, args.offset)
+    if args.device == None:
+        own_device = True
+        loopback = pytemidi.Device(INTERNAL_DEVICE_NAME)
+        loopback.create()
+        device = INTERNAL_DEVICE_NAME
+    else:
+        own_device = False
+        device = args.device
+    full_device = get_full_device_name(mido.get_input_names(), device)
+    if not full_device:
+        raise(Exception("Could not find MIDI device: {device}"))
+    capture_input_port(full_device, args.keymap, args.offset)
 
 if __name__ == "__main__":
     kb_controller = keyboard.Controller()
