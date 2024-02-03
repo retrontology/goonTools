@@ -59,9 +59,22 @@ def play_midi_file(file):
         map_message_to_key(message)
 
 def capture_input_port(name, keymap, offset):
+    full_device = get_full_device_name(mido.get_input_names(), name)
+    if not full_device:
+        raise(Exception(f"Could not find MIDI device: {name}"))
     map_func = partial(map_message_to_key, keymap=keymap, offset=offset)
-    inport = mido.open_input(name, callback=map_func)
+    inport = mido.open_input(full_device, callback=map_func)
     print(f'The midi mapper is now listening to {name}. Either close this window or type Ctrl+C to exit...')
+
+def map_bytes_to_key(self, message_bytes:bytes, keymap, offset):
+    map_message_to_key(mido.Message.from_bytes(message_bytes), keymap, offset)
+        
+def create_virtual_midi(keymap, offset):
+    loopback = pytemidi.Device(name=INTERNAL_DEVICE_NAME)
+    loopback.create()
+    map_func = partial(map_bytes_to_key, keymap=keymap, offset=offset)
+    loopback.register_callback(map_func)
+    print(f'The midi mapper is now listening to {INTERNAL_DEVICE_NAME}. Either close this window or type Ctrl+C to exit...')
     try:
         while True:
             sleep(60)
@@ -70,7 +83,7 @@ def capture_input_port(name, keymap, offset):
         
 def get_full_device_name(devices, target):
     for i in range(len(devices)):
-        if target == devices[i][0:-len(f' i')]:
+        if target == devices[i][0:-len(f' {i}')]:
             return devices[i]
     else:
         return None
@@ -78,18 +91,10 @@ def get_full_device_name(devices, target):
 def main():
     args = parse_args()
     if args.device == None:
-        own_device = True
-        loopback = pytemidi.Device(INTERNAL_DEVICE_NAME)
-        loopback.create()
-        device = INTERNAL_DEVICE_NAME
+        create_virtual_midi(args.keymap, args.offset)
     else:
-        own_device = False
-        device = args.device
-    full_device = get_full_device_name(mido.get_input_names(), device)
-    if not full_device:
-        raise(Exception("Could not find MIDI device: {device}"))
-    capture_input_port(full_device, args.keymap, args.offset)
-
+        capture_input_port(args.device, args.keymap, args.offset)
+    
 if __name__ == "__main__":
     kb_controller = keyboard.Controller()
     main()
